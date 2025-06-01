@@ -6,6 +6,11 @@ module.exports = async (req, res) => {
   const { name, email } = req.body;
   const uri = process.env.MONGODB_URI;
 
+  if (!uri) {
+    console.error("Missing MONGODB_URI environment variable");
+    return res.status(500).json({ message: "Missing DB config" });
+  }
+
   const client = new MongoClient(uri);
   try {
     await client.connect();
@@ -13,9 +18,10 @@ module.exports = async (req, res) => {
     const collection = db.collection("users");
 
     await collection.insertOne({ name, email, timestamp: new Date() });
+
     res.status(200).json({ message: "User added successfully!" });
   } catch (error) {
-    console.error(error);
+    console.error("Error inserting user:", error);
     res.status(500).json({ message: "Internal server error" });
   } finally {
     await client.close();
